@@ -206,3 +206,5 @@ if __name__ == "__main__":
 
     cerebro.plot(style='candlestick')
 
+    print("done")
+
