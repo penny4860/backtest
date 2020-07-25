@@ -1,97 +1,5 @@
-'''
-Author: www.backtest-rookies.com
-
-MIT License
-
-Copyright (c) 2020 backtest-rookies.com
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-'''
 import backtrader as bt
 from datetime import datetime
-import pandas as pd
-import numpy as np
-from alpha_vantage.timeseries import TimeSeries
-
-# IMPORTANT!
-# ----------
-# Register for an API at:
-# https://www.alphavantage.co/support/#api-key
-# Then insert it here.
-Apikey = 'KEKRESWE1Q7OVXTJ'
-
-
-def adjust(date, close, adj_close, in_col, rounding=4):
-    '''
-    If using forex or Crypto - Change the rounding accordingly!
-    '''
-    try:
-        factor = adj_close / close
-        return round(in_col * factor, rounding)
-    except ZeroDivisionError:
-        print('WARNING: DIRTY DATA >> {} Close: {} | Adj Close {} | in_col: {}'.format(date, close, adj_close, in_col))
-        return 0
-
-
-def alpha_vantage_daily_adjusted(symbol_list, compact=False, debug=False, rounding=4, *args, **kwargs):
-    '''
-    Helper function to download Alpha Vantage Data.
-
-    My framework expects a nested list to be returned containing the
-    pandas dataframe and the name of the feed.
-    '''
-    data_list = list()
-
-    size = 'compact' if compact else 'full'
-
-    for symbol in symbol_list:
-
-        if debug:
-            print('Downloading: {}, Size: {}'.format(symbol, size))
-
-        # Submit our API and create a session
-        alpha_ts = TimeSeries(key=Apikey, output_format='pandas')
-
-        # Get the data
-        data, meta_data = alpha_ts.get_daily_adjusted(symbol=symbol, outputsize=size)
-        # data, meta_data = alpha_ts.get_daily(symbol=symbol, outputsize=size)
-
-        if debug:
-            print(data)
-
-        # Convert the index to datetime.
-        data.index = pd.to_datetime(data.index)
-        # Adjust the rest of the data
-        data['adj open'] = np.vectorize(adjust)(data.index.date, data['4. close'], data['5. adjusted close'],
-                                                data['1. open'], rounding=rounding)
-        data['adj high'] = np.vectorize(adjust)(data.index.date, data['4. close'], data['5. adjusted close'],
-                                                data['2. high'], rounding=rounding)
-        data['adj low'] = np.vectorize(adjust)(data.index.date, data['4. close'], data['5. adjusted close'],
-                                               data['3. low'], rounding=rounding)
-
-        # Extract the colums we want to work with and rename them.
-        data = data[['adj open', 'adj high', 'adj low', '5. adjusted close', '6. volume']]
-        data.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
-
-        data_list.append((data, symbol))
-
-    return data_list
 
 
 class RebalanceStrategy(bt.Strategy):
@@ -169,7 +77,7 @@ if __name__ == "__main__":
     cerebro.addstrategy(RebalanceStrategy, assets=strat_params)
 
     start = datetime(2010, 1, 1)
-    end = datetime(2019, 1, 1)
+    end = datetime(2010, 12, 31)
     spy = bt.feeds.YahooFinanceData(dataname="spy", fromdate=start, todate=end)
     tlt = bt.feeds.YahooFinanceData(dataname="tlt", fromdate=start, todate=end)
 
