@@ -8,7 +8,7 @@ yfinance.pdr_override()
 # KOSEF 국고채 10년 (148070.KS)
 TICKERS = ["102110.KS", "DIA", "QQQ", "SPY", 'IEF', 'TLT', "132030.KS", "148070.KS"]
 TICKERS = ["102110.KS", "133690.KS", "148070.KS"]
-TICKERS = ['LTPZ', 'EDV', "SPY"]
+TICKERS = ['EDV', "SPY", "VEA", "VWO", "102110.KS"]
 
 if __name__ == "__main__":
     s = "2000-01-01"
