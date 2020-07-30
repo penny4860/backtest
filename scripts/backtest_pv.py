@@ -1,4 +1,5 @@
 from src.pv import Asset, Agent
+from src.utils import cagr, drawdown
 
 
 if __name__ == "__main__":
@@ -6,12 +7,9 @@ if __name__ == "__main__":
     tlt = Asset.from_yahoo("TLT")
 
     agent = Agent(assets=[spy, tlt], ratios=[0.5, 0.5])
-    values = agent.run(60)
-    print(values.iloc[-2])
-    # 2020-07-29  49157.654274
+    returns = agent.run(60)
 
     agent = Agent(assets=[spy, tlt], ratios=[0.7, 0.3])
-    values = agent.run(60)
-    print(values.iloc[-2])
+    returns = agent.run(60)
     # 2020-07-29  51076.710552
 

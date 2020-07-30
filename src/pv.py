@@ -3,6 +3,8 @@ from pandas_datareader import data
 import yfinance
 yfinance.pdr_override()
 
+from src.utils import cagr, drawdown
+
 TICKERS = ['TLT', "SPY"]
 
 
@@ -76,6 +78,9 @@ class Agent(object):
                 if i % rebalance == 0:
                     self._rebalance(d)
             values.append(self._get_value(d))
+
+        returns = pd.DataFrame(values, index=self.dates)
+        print(f"Total return:{returns.iloc[-2, 0]:.1f}, CAGR:{cagr(returns.iloc[:, 0]):.1f}%, MDD:{drawdown(returns.iloc[:, 0]):.1f}%")
         return pd.DataFrame(values, index=self.dates)
 
 
