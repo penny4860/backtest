@@ -18,20 +18,28 @@ def common_dates(assets):
 
 
 class Asset(object):
-    def __init__(self, df, ticker):
-        self.df = df
+    def __init__(self, df, ticker, currency):
         self.ticker = ticker
         self.n_stocks = 0
 
-    @classmethod
-    def from_yahoo(cls, ticker):
-        df = data.get_data_yahoo(ticker)[["Adj Close"]]
-        df.columns = ["Price"]
-        return Asset(df, ticker)
+        from src.currency import usd2krw
+        _check_currency(currency)
+        if currency == "USD":
+            self.df = usd2krw(df)
+        else:
+            self.df = df
+
 
     @classmethod
-    def from_investing_csv(cls, ticker, csv_file):
+    def from_yahoo(cls, ticker, currency):
+        df = data.get_data_yahoo(ticker)[["Adj Close"]]
+        df.columns = ["Price"]
+        return Asset(df, ticker, currency)
+
+    @classmethod
+    def from_investing_csv(cls, ticker, csv_file, currency):
         # https://www.investing.com/ daily-csv format
+        # Todo: code 정리
         s = "1900-01-01"
         e = "2200-01-01"
         dates = pd.date_range(s, e)
@@ -41,7 +49,7 @@ class Asset(object):
         df_tmp = df_tmp.set_index("Date")
         df = df.join(df_tmp)
         df = df.dropna()
-        return Asset(df, ticker)
+        return Asset(df, ticker, currency)
 
     def get_price(self, d):
         return float(self.df.loc[str(d)])
@@ -60,7 +68,7 @@ class Asset(object):
 
 
 class Agent(object):
-    def __init__(self, assets, ratios=[0.5, 0.5], init_value=10000):
+    def __init__(self, assets, ratios=[0.5, 0.5], init_value=100000000):
         self.cash = init_value
         self.dates = common_dates(assets)
         self.assets = assets
@@ -107,6 +115,10 @@ class Agent(object):
               f"CAGR: {cagr_:.1f}%, "
               f"MDD: {mdd:.1f}%")
         return pd.DataFrame(values, index=self.dates)
+
+
+def _check_currency(currency):
+    assert currency in ["USD", "KRW"]
 
 
 if __name__ == "__main__":
