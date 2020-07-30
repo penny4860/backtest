@@ -26,6 +26,21 @@ class Asset(object):
     @classmethod
     def from_yahoo(cls, ticker):
         df = data.get_data_yahoo(ticker)[["Adj Close"]]
+        df.columns = ["Price"]
+        return Asset(df, ticker)
+
+    @classmethod
+    def from_investing_csv(cls, ticker, csv_file):
+        # https://www.investing.com/ daily-csv format
+        s = "1900-01-01"
+        e = "2200-01-01"
+        dates = pd.date_range(s, e)
+        df = pd.DataFrame(index=dates)
+
+        df_tmp = pd.read_csv(csv_file, usecols=["Date", "Price"])
+        df_tmp = df_tmp.set_index("Date")
+        df = df.join(df_tmp)
+        df = df.dropna()
         return Asset(df, ticker)
 
     def get_price(self, d):
