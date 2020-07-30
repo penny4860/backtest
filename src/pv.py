@@ -80,7 +80,17 @@ class Agent(object):
             values.append(self._get_value(d))
 
         returns = pd.DataFrame(values, index=self.dates)
-        print(f"Total return:{returns.iloc[-2, 0]:.1f}, CAGR:{cagr(returns.iloc[:, 0]):.1f}%, MDD:{drawdown(returns.iloc[:, 0]):.1f}%")
+        final_valance = int(returns.iloc[-2, 0])
+        cagr_ = cagr(returns.iloc[:, 0])
+        mdd = drawdown(returns.iloc[:, 0])
+
+        s = str(self.dates[0])[:-9]
+        e = str(self.dates[-1])[:-9]
+
+        print(f"{s}~{e}", end="::")
+        print(f"Final Valance: {final_valance}, "
+              f"CAGR: {cagr_:.1f}%, "
+              f"MDD: {mdd:.1f}%")
         return pd.DataFrame(values, index=self.dates)
 
 

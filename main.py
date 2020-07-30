@@ -1,5 +1,4 @@
 from src.pv import Asset, Agent
-from src.utils import cagr, drawdown
 
 
 if __name__ == "__main__":
