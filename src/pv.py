@@ -1,9 +1,12 @@
 import pandas as pd
 from pandas_datareader import data
 import yfinance
+import numpy as np
 yfinance.pdr_override()
 
+
 from src.utils import cagr, drawdown
+
 
 TICKERS = ['TLT', "SPY"]
 
@@ -18,26 +21,24 @@ def common_dates(assets):
 
 
 class Asset(object):
-    def __init__(self, df, ticker, currency):
+    def __init__(self, df, ticker, to_krw):
         self.ticker = ticker
         self.n_stocks = 0
 
         from src.currency import usd2krw
-        _check_currency(currency)
-        if currency == "USD":
+        if to_krw:
             self.df = usd2krw(df)
         else:
             self.df = df
 
-
     @classmethod
-    def from_yahoo(cls, ticker, currency):
+    def from_yahoo(cls, ticker, to_krw):
         df = data.get_data_yahoo(ticker)[["Adj Close"]]
         df.columns = ["Price"]
-        return Asset(df, ticker, currency)
+        return Asset(df, ticker, to_krw)
 
     @classmethod
-    def from_investing_csv(cls, ticker, csv_file, currency):
+    def from_investing_csv(cls, ticker, csv_file, to_krw):
         # https://www.investing.com/ daily-csv format
         # Todo: code 정리
         s = "1900-01-01"
@@ -49,7 +50,7 @@ class Asset(object):
         df_tmp = df_tmp.set_index("Date")
         df = df.join(df_tmp)
         df = df.dropna()
-        return Asset(df, ticker, currency)
+        return Asset(df, ticker, to_krw)
 
     def get_price(self, d):
         return float(self.df.loc[str(d)])
@@ -69,6 +70,7 @@ class Asset(object):
 
 class Agent(object):
     def __init__(self, assets, ratios=[0.5, 0.5], init_value=100000000):
+        self.init_value = init_value
         self.cash = init_value
         self.dates = common_dates(assets)
         self.assets = assets
@@ -80,26 +82,43 @@ class Agent(object):
             value += asset.get_value(d)
         return value
 
-    def _rebalance(self, d):
+    def _rebalance(self, d, ratios):
         value = self._get_value(d)
 
         self.cash = 0
-        for asset, ratio in zip(self.assets, self.ratios):
+        for asset, ratio in zip(self.assets, ratios):
             target_value = value * ratio
             balance = asset.set_value(d, target_value)
             self.cash += balance
 
-    def run(self, rebalance=60):
-        # Todo : 주기를 1달단위로
+    def corr(self):
+        df = pd.DataFrame(index=self.dates)
+        for asset in self.assets:
+            df_tmp = asset.df.copy()
+            df_tmp = df_tmp.rename(columns={"Price": asset.ticker})
+            df = df.join(df_tmp)
+            df = df.dropna()
+
+        df = df / df.iloc[0]
+        daily_returns = df.copy()
+        daily_returns[1:] = (df[1:] / df[:-1].values) - 1
+        daily_returns.iloc[0] = 0
+        print(daily_returns.corr(method="pearson"))
+        return daily_returns
+
+    def _run_loop(self, rebalance, ratios, title=""):
+        # 초기화
+        self.cash = self.init_value
         for asset in self.assets:
             asset.n_stocks = 0
-        self._rebalance(self.dates[0])
+        self._rebalance(self.dates[0], ratios)
 
+        # run
         values = []
         for i, d in enumerate(self.dates):
             if rebalance is not None:
                 if i % rebalance == 0:
-                    self._rebalance(d)
+                    self._rebalance(d, ratios)
             values.append(self._get_value(d))
 
         returns = pd.DataFrame(values, index=self.dates)
@@ -110,11 +129,26 @@ class Agent(object):
         s = str(self.dates[0])[:-9]
         e = str(self.dates[-1])[:-9]
 
-        print(f"{s}~{e}", end="::")
+        print(f"[{title}]::{s}~{e}", end="::")
         print(f"Final Valance: {final_valance}, "
               f"CAGR: {cagr_:.1f}%, "
               f"MDD: {mdd:.1f}%")
-        return pd.DataFrame(values, index=self.dates)
+        return returns.values
+
+    def run(self, rebalance=60):
+        values = self._run_loop(rebalance, self.ratios, "Portfolio")
+        asset_values = []
+        for i, asset in enumerate(self.assets):
+            ratio = np.zeros_like(self.ratios)
+            ratio[i] = 1.0
+            asset_values.append(self._run_loop(None, ratio, asset.ticker))
+
+        asset_values = np.array(asset_values).transpose().reshape(-1, len(self.assets))
+
+        values = np.concatenate([values, asset_values], axis=1)
+        values = values / values[0, :]
+        columns = ["Portfolio"] + [asset.ticker for asset in self.assets]
+        return pd.DataFrame(values, index=self.dates, columns=columns)
 
 
 def _check_currency(currency):

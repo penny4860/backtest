@@ -9,10 +9,11 @@ yfinance.pdr_override()
 TICKERS = ["102110.KS", "DIA", "QQQ", "SPY", 'IEF', 'TLT', "132030.KS", "148070.KS"]
 TICKERS = ["102110.KS", "133690.KS", "148070.KS"]
 TICKERS = ['EDV', "SPY", "VEA", "VWO", "102110.KS"]
+TICKERS = ["SPY", "TLT"]
 
 if __name__ == "__main__":
     s = "2000-01-01"
-    e = "2020-07-07"
+    e = "2020-07-31"
     dates = pd.date_range(s, e)
 
     df = pd.DataFrame(index=dates)
@@ -31,4 +32,5 @@ if __name__ == "__main__":
     daily_returns = df.copy()
     daily_returns[1:] = (df[1:] / df[:-1].values) - 1
     daily_returns.iloc[0] = 0
+    print(daily_returns)
     print(daily_returns.corr(method="pearson"))
