@@ -50,6 +50,8 @@ class Asset(object):
         df_tmp = df_tmp.set_index("Date")
         df = df.join(df_tmp)
         df = df.dropna()
+        df["Price"] = df['Price'].str.replace(',', '')
+        df["Price"] = df['Price'].astype(float)
         return Asset(df, ticker, to_krw)
 
     def get_price(self, d):
