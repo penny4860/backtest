@@ -2,6 +2,7 @@ import pandas as pd
 from pandas_datareader import data
 import yfinance
 import numpy as np
+import FinanceDataReader as fdr
 yfinance.pdr_override()
 
 
@@ -32,6 +33,12 @@ class Asset(object):
             self.df = df
 
     @classmethod
+    def from_fdr(cls, ticker, to_krw):
+        df = fdr.DataReader(ticker)[["Close"]]
+        df.columns = ["Price"]
+        return Asset(df, ticker, to_krw)
+
+    @classmethod
     def from_yahoo(cls, ticker, to_krw):
         df = data.get_data_yahoo(ticker)[["Adj Close"]]
         df.columns = ["Price"]
@@ -50,6 +57,8 @@ class Asset(object):
         df_tmp = df_tmp.set_index("Date")
         df = df.join(df_tmp)
         df = df.dropna()
+
+        df["Price"] = df["Price"].astype(str)
         df["Price"] = df['Price'].str.replace(',', '')
         df["Price"] = df['Price'].astype(float)
         return Asset(df, ticker, to_krw)
@@ -133,7 +142,7 @@ class Agent(object):
         e = str(self.dates[-1])[:-9]
 
         print(f"[{title}]::{s}~{e}", end="::")
-        print(f"Final Valance: {final_valance}, "
+        print(f"Final Balance: {final_valance}, "
               f"CAGR: {cagr_:.1f}%, "
               f"MDD: {mdd:.1f}%")
         return returns.values

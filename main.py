@@ -2,18 +2,17 @@ from src.pv import Asset, Agent
 import matplotlib.pyplot as plt
 
 
+# 환헤지 : to_krw=False
 if __name__ == "__main__":
-    spy = Asset.from_yahoo("SPY", to_krw=False)
-    tlt = Asset.from_yahoo("TLT", to_krw=False)
+    # kospi = Asset.from_investing_csv("KOSPI", "./datas/KOSPI200.csv", to_krw=False)
+    # spy = Asset.from_yahoo("SPY", to_krw=True)
+    iau = Asset.from_yahoo("IAU", to_krw=True)
+    kodex_gold = Asset.from_fdr("132030", to_krw=False)
 
-    assets = [spy, tlt]
-    agent = Agent(assets=assets, ratios=[0.6, 0.4])
+    assets = [iau, kodex_gold]
+    agent = Agent(assets=assets, ratios=[0.5, 0.5])
     agent.corr()
 
-    df = agent.run(60)
+    df = agent.run(120)
     df.plot()
     plt.show()
-
-# [Portfolio]::2002-07-30~2020-07-31::Final Valance: 506501333, CAGR: 9.5%, MDD: -30.8%
-# [SPY]::2002-07-30~2020-07-31::Final Valance: 508317881, CAGR: 9.5%, MDD: -55.2%
-# [TLT]::2002-07-30~2020-07-31::Final Valance: 396696496, CAGR: 8.0%, MDD: -26.6%
