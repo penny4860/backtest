@@ -102,6 +102,7 @@ class Agent(object):
             df = df.dropna()
 
         df = df / df.iloc[0]
+        df = df.resample('1M').mean()
         daily_returns = df.copy()
         daily_returns[1:] = (df[1:] / df[:-1].values) - 1
         daily_returns.iloc[0] = 0
