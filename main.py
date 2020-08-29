@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 # 환헤지 : to_krw=False
 if __name__ == "__main__":
+    # Todo : 백테스트 기간을 정할수 있게 구현
     # kospi = Asset.from_investing_csv("KOSPI", "./datas/KOSPI200.csv", to_krw=False)
     # spy = Asset.from_yahoo("SPY", to_krw=True)
     iau = Asset.from_yahoo("IAU", to_krw=True)
