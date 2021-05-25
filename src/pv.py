@@ -22,8 +22,12 @@ def common_dates(assets):
 
 
 class Asset(object):
-    def __init__(self, df, ticker, to_krw):
-        self.ticker = ticker
+    def __init__(self, df, ticker, to_krw, t_name=None):
+        if t_name is None:
+            self.ticker = ticker
+        else:
+            self.ticker = t_name
+
         self.n_stocks = 0
 
         from src.currency import usd2krw
@@ -39,10 +43,10 @@ class Asset(object):
         return Asset(df, ticker, to_krw)
 
     @classmethod
-    def from_yahoo(cls, ticker, to_krw):
+    def from_yahoo(cls, ticker, to_krw, t_name=None):
         df = data.get_data_yahoo(ticker)[["Adj Close"]]
         df.columns = ["Price"]
-        return Asset(df, ticker, to_krw)
+        return Asset(df, ticker, to_krw, t_name)
 
     @classmethod
     def from_investing_csv(cls, ticker, csv_file, to_krw):
