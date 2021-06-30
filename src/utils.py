@@ -28,3 +28,14 @@ def fdr2backtrader(df):
     """
     df = df[["Open", "High", "Low", "Close", "Volume"]]
     return df
+
+
+def apply_adj_close_stock(df: pd.DataFrame):
+    # 데이터를 수정 종가기준으로 보정해주는 함수
+    # df.columns : [Open, High, Low, Close, Adj Close]
+    adj_ratio = df["Adj Close"] / df["Close"]
+    df["Open"] = df["Open"] * adj_ratio
+    df["High"] = df["High"] * adj_ratio
+    df["Low"] = df["Low"] * adj_ratio
+    df["Close"] = df["Close"] * adj_ratio
+    return df
