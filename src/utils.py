@@ -16,3 +16,15 @@ def cagr(prices: pd.Series):
     # 연평균 수익률
     delta = (prices.index[-1] - prices.index[0]).days / 365.25
     return ((prices[-1] / prices[0]) ** (1 / delta) - 1) * 100
+
+
+def fdr2backtrader(df):
+    """FinanceDataReader package로 읽어온 데이터를 Backtrader 방식으로 변환하는 함수
+
+    # Example
+        import FinanceDataReader as fdr
+        df = fdr.DataReader('SPY')
+        df = fdr2backtrader(df)
+    """
+    df = df[["Open", "High", "Low", "Close", "Volume"]]
+    return df
